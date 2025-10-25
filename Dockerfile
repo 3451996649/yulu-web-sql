@@ -27,4 +27,4 @@ RUN chown -R yulu:yulu /app /data
 USER yulu
 
 # 在容器启动时运行服务器
-CMD ["gunicorn", "--bind", "0.0.0.0:6673", "--workers", "4", "yulu_server:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:6673", "--workers", "4", "yulu_server_sql:app"]
