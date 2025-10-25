@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 将当前目录内容复制到容器的 /app 目录中
 COPY requirements.txt .
-COPY yulu_server.py .
+COPY yulu_server_sql.py .
 
 # 安装依赖包
 RUN pip install --no-cache-dir -r requirements.txt
