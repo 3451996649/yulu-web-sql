@@ -4,7 +4,6 @@ import json
 import sqlite3
 import os
 from datetime import datetime
-import os
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域请求
@@ -14,22 +13,28 @@ DB_FILE = os.getenv('DB_FILE', 'quotes.db')
 
 def init_db():
     """初始化数据库"""
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS quotes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            client_id TEXT NOT NULL,
-            message TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    cursor.execute('''
-        CREATE INDEX IF NOT EXISTS idx_client_id 
-        ON quotes(client_id)
-    ''')
-    conn.commit()
-    conn.close()
+    conn = None
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS quotes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                client_id TEXT NOT NULL,
+                message TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_client_id 
+            ON quotes(client_id)
+        ''')
+        conn.commit()
+    except Exception as e:
+        print(f"数据库初始化失败: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 @app.route('/quotes', methods=['GET', 'POST'])
 def handle_quotes():
@@ -66,6 +71,7 @@ def handle_quotes():
 
 def send_message(client_id):
     """获取指定客户端的语录列表"""
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -84,13 +90,15 @@ def send_message(client_id):
     except Exception as e:
         return jsonify({"error": f"获取语录失败: {str(e)}"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def save_message(client_id, message):
     """保存语录到数据库"""
     if not message or not message.strip():
         return jsonify({"error": "语录内容不能为空"}), 400
     
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -107,10 +115,12 @@ def save_message(client_id, message):
     except Exception as e:
         return jsonify({"error": f"保存语录失败: {str(e)}"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def delete_message(client_id, quote_id):
     """删除指定语录"""
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -126,10 +136,12 @@ def delete_message(client_id, quote_id):
     except Exception as e:
         return jsonify({"error": f"删除语录失败: {str(e)}"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 def clear_messages(client_id):
     """清空指定客户端的所有语录"""
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -142,11 +154,13 @@ def clear_messages(client_id):
     except Exception as e:
         return jsonify({"error": f"清空语录失败: {str(e)}"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @app.route('/stats', methods=['GET'])
 def get_stats():
     """获取统计信息"""
+    conn = None
     try:
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
@@ -182,7 +196,8 @@ def get_stats():
     except Exception as e:
         return jsonify({"error": f"获取统计信息失败: {str(e)}"}), 500
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     # 初始化数据库
@@ -194,4 +209,4 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 6673))
     debug = os.getenv('FLASK_ENV') == 'development'
     
-    app.run(host=host, port=port, debug=False)
+    app.run(host=host, port=port, debug=debug)
