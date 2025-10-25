@@ -194,4 +194,4 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 6673))
     debug = os.getenv('FLASK_ENV') == 'development'
     
-    app.run(host=host, port=port, debug=debug)
+    app.run(host=host, port=port, debug=False)
